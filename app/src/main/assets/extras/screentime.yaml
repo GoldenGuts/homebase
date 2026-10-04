@@ -1,0 +1,65 @@
+# Homebase · Screen time. Replace PHONE, TV and COMPUTER with your entity ids.
+sensor:
+  - platform: history_stats
+    name: Screen time phone
+    unique_id: homebase_screen_time_phone
+    entity_id: binary_sensor.PHONE_interactive
+    state: "on"
+    type: time
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Screen time TV
+    unique_id: homebase_screen_time_tv
+    entity_id: media_player.TV
+    state: ["on", "playing", "paused", "idle"]
+    type: time
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Screen time computer
+    unique_id: homebase_screen_time_computer
+    entity_id: binary_sensor.COMPUTER_active
+    state: "on"
+    type: time
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Screen time phone week
+    unique_id: homebase_screen_time_phone_week
+    entity_id: binary_sensor.PHONE_interactive
+    state: "on"
+    type: time
+    start: "{{ today_at() - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Screen time TV week
+    unique_id: homebase_screen_time_tv_week
+    entity_id: media_player.TV
+    state: ["on", "playing", "paused", "idle"]
+    type: time
+    start: "{{ today_at() - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Screen time computer week
+    unique_id: homebase_screen_time_computer_week
+    entity_id: binary_sensor.COMPUTER_active
+    state: "on"
+    type: time
+    start: "{{ today_at() - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+
+template:
+  - sensor:
+      - name: Screen time today
+        unique_id: homebase_screen_time_today
+        unit_of_measurement: h
+        state: >
+          {{ (states('sensor.screen_time_phone') | float(0) + states('sensor.screen_time_tv') | float(0)
+              + states('sensor.screen_time_computer') | float(0)) | round(1) }}
+      - name: Screen time week
+        unique_id: homebase_screen_time_week
+        unit_of_measurement: h
+        state: >
+          {{ (states('sensor.screen_time_phone_week') | float(0) + states('sensor.screen_time_tv_week') | float(0)
+              + states('sensor.screen_time_computer_week') | float(0)) | round(1) }}

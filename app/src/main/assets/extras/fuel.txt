@@ -1,0 +1,11 @@
+# What it shows
+
+Calories eaten today against a goal, protein, carbs and fat, water with +250 / +500 buttons, and Snack / Light meal / Meal quick adds. The Water +250 tile uses the same numbers.
+
+# What it needs
+
+Only Home Assistant helpers and two scripts: the package below creates all of them, plus an automation that resets the day at midnight. Nothing else to install.
+
+# Logging food
+
+The quick-add chips call script.fuel_add_food with calories and a name. To log exact values, call the same script from an automation, a voice assistant or the Home Assistant app. Protein, carbs and fat are plain numbers you can set from any integration (a food tracker, a REST sensor, a spreadsheet).

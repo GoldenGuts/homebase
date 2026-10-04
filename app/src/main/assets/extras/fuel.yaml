@@ -1,0 +1,49 @@
+# Homebase · Fuel. Creates the entities the Fuel widget and the Water tile read.
+input_number:
+  fuel_calories: { name: Calories today, min: 0, max: 10000, step: 1, mode: box, unit_of_measurement: kcal }
+  fuel_calorie_goal: { name: Calorie goal, min: 0, max: 10000, step: 10, mode: box, initial: 2200, unit_of_measurement: kcal }
+  fuel_protein: { name: Protein today, min: 0, max: 1000, step: 1, mode: box, unit_of_measurement: g }
+  fuel_protein_goal: { name: Protein goal, min: 0, max: 1000, step: 1, mode: box, initial: 120, unit_of_measurement: g }
+  fuel_carbs: { name: Carbs today, min: 0, max: 2000, step: 1, mode: box, unit_of_measurement: g }
+  fuel_fat: { name: Fat today, min: 0, max: 1000, step: 1, mode: box, unit_of_measurement: g }
+  fuel_water: { name: Water today, min: 0, max: 10000, step: 50, mode: box, unit_of_measurement: ml }
+  fuel_water_goal: { name: Water goal, min: 0, max: 10000, step: 50, mode: box, initial: 2500, unit_of_measurement: ml }
+
+input_text:
+  fuel_last_entry: { name: Last food entry, max: 100 }
+
+script:
+  fuel_add_water:
+    alias: Add water
+    fields:
+      ml: { description: Millilitres, example: 250 }
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.fuel_water }
+        data:
+          value: "{{ states('input_number.fuel_water') | float(0) + (ml | float(250)) }}"
+  fuel_add_food:
+    alias: Add food
+    fields:
+      calories: { description: Calories, example: 450 }
+      name: { description: What it was, example: Light meal }
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.fuel_calories }
+        data:
+          value: "{{ states('input_number.fuel_calories') | float(0) + (calories | float(0)) }}"
+      - action: input_text.set_value
+        target: { entity_id: input_text.fuel_last_entry }
+        data:
+          value: "{{ now().strftime('%H:%M') }} · {{ name | default('Food') }} · {{ calories | int(0) }} kcal"
+
+automation:
+  - alias: Homebase · Fuel · new day
+    triggers:
+      - trigger: time
+        at: "00:00:00"
+    actions:
+      - action: input_number.set_value
+        target:
+          entity_id: [input_number.fuel_calories, input_number.fuel_protein, input_number.fuel_carbs, input_number.fuel_fat, input_number.fuel_water]
+        data: { value: 0 }

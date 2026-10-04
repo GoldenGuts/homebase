@@ -1,0 +1,51 @@
+name: Build
+
+# Builds only; tests run locally. Nothing is uploaded: the app is installed from
+# Google Play or built from source. The iOS job only checks that the app compiles (an installable iOS build
+# needs your Apple signing certificate), so it runs when started by hand: Actions → Build → Run workflow.
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      ios:
+        description: "Also check that the iOS app compiles (macOS runner)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17", cache: gradle }
+      - name: Android SDK packages
+        run: |
+          SDKM=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)/sdkmanager
+          yes | "$SDKM" --install "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - name: APK + App Bundle
+        run: chmod +x gradlew && ./gradlew --no-daemon assembleRelease bundleRelease
+
+  ios:
+    if: github.event_name == 'workflow_dispatch' && inputs.ios
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17", cache: gradle }
+      - name: HomebaseCore.xcframework
+        run: chmod +x gradlew && ./gradlew --no-daemon :shared:assembleHomebaseCoreReleaseXCFramework
+      - name: Xcode project
+        run: brew install xcodegen && cd ios && xcodegen generate
+      - name: Compile app + widgets (device, Release, unsigned)
+        run: |
+          cd ios
+          xcodebuild -project Homebase.xcodeproj -scheme Homebase -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build.log

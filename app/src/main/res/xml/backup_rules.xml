@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: widget settings and defaults move to a new phone, the login does not. -->
+<full-backup-content>
+    <include domain="sharedpref" path="widgets.xml" />
+    <include domain="sharedpref" path="config.xml" />
+</full-backup-content>

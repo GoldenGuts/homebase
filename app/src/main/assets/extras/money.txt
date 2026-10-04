@@ -1,0 +1,19 @@
+# What it shows
+
+Spending: this month against a budget, five categories, an insight line, renewals coming up, card dues and recent transactions. Budget: the ring, what is left per day, today and the last 7 days. Coming up: renewals and card dues.
+
+# What it needs
+
+Numbers for the month and five categories, a budget, and one "feed" sensor whose attributes hold the lists. The package below creates them with a script, money_add, that books an expense. Set the currency symbol under Settings → Defaults → General.
+
+# Filling it
+
+Call script.money_add from wherever your spending shows up: an automation on the Home Assistant app's notification sensor (bank alerts), an email or IMAP integration, a spreadsheet, or by hand.
+
+The lists (insight, renewals, card dues, recent transactions, daily totals) sit in the attributes of sensor.spend_feed. Any automation updates them by firing the event homebase_money_feed, for example:
+
+insight: {"text": "Food is 60% of this month so far."}
+coming_up: [{"merchant": "Netflix", "amount": 649, "date": "2026-10-02"}]
+cards: [{"bank": "Visa", "last": "1111", "due": 21600, "due_date": "2026-10-05"}]
+recent: [{"ts": 1790000000, "amount": 412, "merchant": "Takeaway", "category": "food", "kind": "debit"}]
+days: [{"date": "2026-09-27", "total": 412}]

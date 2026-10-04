@@ -1,0 +1,42 @@
+# Android / Gradle
+.gradle/
+.kotlin/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
+.cxx/
+.DS_Store
+
+# Release signing (never commit these)
+keystore.properties
+*.jks
+*.keystore
+
+# Marketing / showcase content (not part of the app)
+/marketing/
+/docs/
+/dist/
+/scripts/
+
+# iOS (the Xcode project is generated from ios/project.yml by XcodeGen)
+ios/Homebase.xcodeproj/
+ios/build/
+ios/build.log
+ios/device.log
+xcuserdata/
+*.xcuserstate
+
+# Python bytecode (CI helpers)
+__pycache__/
+
+# end-to-end test output
+e2e-android/
+e2e-ios/
+ios/build2.log
+ios/App/Info.plist
+ios/Widgets/Info.plist
+ios/App/Homebase.entitlements
+ios/Widgets/HomebaseWidgets.entitlements

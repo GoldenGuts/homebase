@@ -1,0 +1,46 @@
+# Homebase · Overhead. Replace YOUR_N2YO_KEY (free at n2yo.com). Uses zone.home's location.
+rest:
+  - resource_template: >-
+      https://opensky-network.org/api/states/all?lamin={{ state_attr('zone.home','latitude') - 0.9 }}&lamax={{ state_attr('zone.home','latitude') + 0.9 }}&lomin={{ state_attr('zone.home','longitude') - 1.4 }}&lomax={{ state_attr('zone.home','longitude') + 1.4 }}
+    scan_interval: 120
+    sensor:
+      - name: OpenSky raw
+        unique_id: homebase_opensky_raw
+        value_template: "{{ (value_json.states or []) | length }}"
+        json_attributes: [states]
+  - resource_template: >-
+      https://api.n2yo.com/rest/v1/satellite/above/{{ state_attr('zone.home','latitude') }}/{{ state_attr('zone.home','longitude') }}/0/70/0/&apiKey=YOUR_N2YO_KEY
+    scan_interval: 600
+    sensor:
+      - name: N2YO raw
+        unique_id: homebase_n2yo_raw
+        value_template: "{{ value_json.info.satcount | default(0) }}"
+        json_attributes: [above]
+
+template:
+  - sensor:
+      - name: Satellites overhead
+        unique_id: homebase_satellites_overhead
+        state: "{{ states('sensor.n2yo_raw') }}"
+        attributes:
+          lit: "{{ states('sensor.n2yo_raw') | int(0) }}"
+          starlink: "{{ (state_attr('sensor.n2yo_raw', 'above') or []) | selectattr('satname', 'search', 'STARLINK') | list | length }}"
+          highest: "{{ ((state_attr('sensor.n2yo_raw', 'above') or []) | sort(attribute='satalt') | list)[:1] | map(attribute='satname') | map('string') | list }}"
+      - name: Planes overhead
+        unique_id: homebase_planes_overhead
+        state: "{{ states('sensor.opensky_raw') }}"
+        attributes:
+          radius_km: 100
+          planes: >
+            {% set lat0 = state_attr('zone.home','latitude') | float %}{% set lon0 = state_attr('zone.home','longitude') | float %}
+            {% set ns = namespace(out=[]) %}
+            {% for s in state_attr('sensor.opensky_raw', 'states') or [] %}
+              {% if s[5] and s[6] %}
+                {% set dx = (s[5] - lon0) * 111.32 * cos(lat0 * pi / 180) %}{% set dy = (s[6] - lat0) * 110.57 %}
+                {% set d = (dx * dx + dy * dy) ** 0.5 %}
+                {% if d <= 100 %}{% set ns.out = ns.out + [{'callsign': (s[1] or '').strip(), 'airline': s[2], 'dist_km': d | round(1),
+                  'alt_ft': ((s[7] or 0) * 3.281) | round(-2) | int, 'climb': (1 if (s[11] or 0) > 1 else -1 if (s[11] or 0) < -1 else 0),
+                  'dir': ['N','NE','E','SE','S','SW','W','NW'][((atan2(dx, dy) * 180 / pi + 382.5) % 360 / 45) | int]}] %}{% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.out | sort(attribute='dist_km') }}

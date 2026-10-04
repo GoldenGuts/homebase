@@ -1,0 +1,11 @@
+# What it shows
+
+Whether the gaming PC is on, hours played today, a game picker ‹ › and Wake / Launch / quick launch chips.
+
+# What it needs
+
+The Wake on LAN integration (add `wake_on_lan:` to configuration.yaml) and the PC's MAC address, which you enter in the app: open the Gaming PC widget's settings → Advanced → PC MAC address.
+
+A sensor that is on while the PC is up: the Ping integration (Settings → Devices → Add integration → Ping, then use its binary sensor) or HASS.Agent. The package mirrors it into binary_sensor.pc_active; replace binary_sensor.PC_ping with yours.
+
+Launching a game needs something on the PC that Home Assistant can call: HASS.Agent commands, or a webhook / SSH command. The script in the package is a placeholder that shows where that call goes.

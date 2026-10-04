@@ -1,0 +1,871 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- finding Home Assistant on the local network (mDNS) -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <!-- so the widgets can open the Home Assistant companion app by deep link -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="homeassistant" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".App"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Homebase"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".ConnectActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".LoginActivity" android:exported="false" />
+        <activity android:name=".HomeSetupActivity" android:exported="false" />
+        <activity android:name=".PickerActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".SettingsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".GuideActivity" android:exported="false" />
+        <activity android:name=".ProActivity" android:exported="false" />
+        <!-- homebase://unlock?c=… code links (signed by the developer) -->
+        <activity
+            android:name=".UnlockActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="homebase" android:host="unlock" />
+            </intent-filter>
+        </activity>
+
+        <!-- launched by the launcher for "reconfigure"; widgets are configuration_optional, so adding one never waits on it -->
+        <activity
+            android:name=".ConfigureActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".widgets.ActionReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".widgets.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- WIDGETS -->
+        <receiver
+            android:name=".widgets.FavoritesWidget"
+            android:exported="true"
+            android:label="@string/w_favorites">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_favorites" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.SuggestedWidget"
+            android:exported="true"
+            android:label="@string/w_suggested">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_suggested" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.RoomWidget"
+            android:exported="true"
+            android:label="@string/w_room">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_room" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.EnergyWidget"
+            android:exported="true"
+            android:label="@string/w_energy">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_energy" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.SecurityWidget"
+            android:exported="true"
+            android:label="@string/w_security">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_security" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.GraphWidget"
+            android:exported="true"
+            android:label="@string/w_graph">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_graph" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DevicesWidget"
+            android:exported="true"
+            android:label="@string/w_devices">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_devices" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.WeatherWidget"
+            android:exported="true"
+            android:label="@string/w_weather">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_weather" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.WeatherSmallWidget"
+            android:exported="true"
+            android:label="@string/w_weather_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_weather_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.NowWidget"
+            android:exported="true"
+            android:label="@string/w_now">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_now" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.NowBarWidget"
+            android:exported="true"
+            android:label="@string/w_now_bar">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_now_bar" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.NowSmallWidget"
+            android:exported="true"
+            android:label="@string/w_now_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_now_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.TodoWidget"
+            android:exported="true"
+            android:label="@string/w_todo">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_todo" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.QuickActionsWidget"
+            android:exported="true"
+            android:label="@string/w_scenes">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_scenes" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BulbWidget"
+            android:exported="true"
+            android:label="@string/w_light">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_light" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BulbTile"
+            android:exported="true"
+            android:label="@string/w_t_bulb">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_bulb" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.PeopleWidget"
+            android:exported="true"
+            android:label="@string/w_people">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_people" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CameraWidget"
+            android:exported="true"
+            android:label="@string/w_camera">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_camera" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.VacuumWidget"
+            android:exported="true"
+            android:label="@string/w_vacuum">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_vacuum" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CoversWidget"
+            android:exported="true"
+            android:label="@string/w_covers">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_covers" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CountdownWidget"
+            android:exported="true"
+            android:label="@string/w_countdown">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_countdown" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CalendarWidget"
+            android:exported="true"
+            android:label="@string/w_calendar">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_calendar" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BatteryWidget"
+            android:exported="true"
+            android:label="@string/w_battery">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_battery" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BinsWidget"
+            android:exported="true"
+            android:label="@string/w_bins">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_bins" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.EvWidget"
+            android:exported="true"
+            android:label="@string/w_ev">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_ev" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.TvRemoteWidget"
+            android:exported="true"
+            android:label="@string/w_tvremote">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_tvremote" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.SkyWidget"
+            android:exported="true"
+            android:label="@string/w_sky">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sky" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BodyWidget"
+            android:exported="true"
+            android:label="@string/w_body">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_body" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BodySmallWidget"
+            android:exported="true"
+            android:label="@string/w_body_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_body_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.MacWidget"
+            android:exported="true"
+            android:label="@string/w_mac">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mac" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.MacScreenWidget"
+            android:exported="true"
+            android:label="@string/w_macscreen">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_macscreen" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ClaudeWidget"
+            android:exported="true"
+            android:label="@string/w_claude">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_claude" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ClaudeSmallWidget"
+            android:exported="true"
+            android:label="@string/w_claude_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_claude_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ProjectsWidget"
+            android:exported="true"
+            android:label="@string/w_projects">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_projects" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.GamingWidget"
+            android:exported="true"
+            android:label="@string/w_gaming">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_gaming" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.SpendWidget"
+            android:exported="true"
+            android:label="@string/w_spend">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_spend" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DuesWidget"
+            android:exported="true"
+            android:label="@string/w_dues">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_dues" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BudgetWidget"
+            android:exported="true"
+            android:label="@string/w_budget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_budget" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BudgetSmallWidget"
+            android:exported="true"
+            android:label="@string/w_budget_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_budget_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.NutritionWidget"
+            android:exported="true"
+            android:label="@string/w_nutrition">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_nutrition" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ScreenTimeWidget"
+            android:exported="true"
+            android:label="@string/w_screentime">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_screentime" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ScreenTimeSmallWidget"
+            android:exported="true"
+            android:label="@string/w_screentime_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_screentime_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.OverheadWidget"
+            android:exported="true"
+            android:label="@string/w_overhead">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_overhead" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.OverheadSmallWidget"
+            android:exported="true"
+            android:label="@string/w_overhead_s">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_overhead_s" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ClaudeTile"
+            android:exported="true"
+            android:label="@string/w_t_claude">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_claude" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.WakePcTile"
+            android:exported="true"
+            android:label="@string/w_t_pc">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_pc" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.LockMacTile"
+            android:exported="true"
+            android:label="@string/w_t_lock">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_lock" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.WaterTile"
+            android:exported="true"
+            android:label="@string/w_t_water">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_water" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.ScreenOffTile"
+            android:exported="true"
+            android:label="@string/w_t_screenoff">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_screenoff" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.TubeWidget"
+            android:exported="true"
+            android:label="@string/w_tube">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_tube" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.TubeTile"
+            android:exported="true"
+            android:label="@string/w_t_tube">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_tube" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.FanTile"
+            android:exported="true"
+            android:label="@string/w_t_fan">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_fan" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.TvTile"
+            android:exported="true"
+            android:label="@string/w_t_tv">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_tv" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.MovieTile"
+            android:exported="true"
+            android:label="@string/w_t_movie">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_movie" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.AllOffTile"
+            android:exported="true"
+            android:label="@string/w_t_alloff">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_alloff" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <receiver
+            android:name=".widgets.MusicTile"
+            android:exported="true"
+            android:label="@string/w_t_music">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_t_music" />
+            <meta-data
+                android:name="com.samsung.android.appwidget.provider"
+                android:resource="@xml/samsung_cover" />
+        </receiver>
+        <!-- /WIDGETS -->
+    </application>
+</manifest>

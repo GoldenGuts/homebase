@@ -1,0 +1,63 @@
+# Homebase · Money. Creates what the Spending, Budget and Coming up widgets read.
+input_number:
+  spent_this_month: { name: Spent this month, min: 0, max: 100000000, step: 1, mode: box }
+  budget_month: { name: Monthly budget, min: 0, max: 100000000, step: 100, mode: box, initial: 60000 }
+  spent_food: { name: Spent on food, min: 0, max: 100000000, step: 1, mode: box }
+  spent_subs: { name: Spent on subscriptions, min: 0, max: 100000000, step: 1, mode: box }
+  spent_other: { name: Spent on rent and other, min: 0, max: 100000000, step: 1, mode: box }
+  spent_travel: { name: Spent on travel, min: 0, max: 100000000, step: 1, mode: box }
+  spent_shopping: { name: Spent on shopping, min: 0, max: 100000000, step: 1, mode: box }
+
+template:
+  # The lists live in the attributes of one trigger-based sensor. Fire the event
+  # homebase_money_feed with any of insight / coming_up / cards / recent / days to update them.
+  - triggers:
+      - trigger: event
+        event_type: homebase_money_feed
+    sensor:
+      - name: Spend feed
+        unique_id: homebase_spend_feed
+        state: "{{ now().timestamp() | int }}"
+        attributes:
+          insight: "{{ trigger.event.data.insight | default(this.attributes.insight | default({})) }}"
+          coming_up: "{{ trigger.event.data.coming_up | default(this.attributes.coming_up | default([])) }}"
+          cards: "{{ trigger.event.data.cards | default(this.attributes.cards | default([])) }}"
+          recent: "{{ trigger.event.data.recent | default(this.attributes.recent | default([])) }}"
+          days: "{{ trigger.event.data.days | default(this.attributes.days | default([])) }}"
+  - sensor:
+      - name: Bills due 14d
+        unique_id: homebase_bills_due_14d
+        state: >
+          {% set ns = namespace(t=0) %}
+          {% for c in state_attr('sensor.spend_feed', 'cards') or [] %}
+            {% if c.due_date is defined and (as_datetime(c.due_date) | as_local - now()).days <= 14 %}{% set ns.t = ns.t + (c.due | float(0)) %}{% endif %}
+          {% endfor %}
+          {{ ns.t }}
+
+script:
+  money_add:
+    alias: Book an expense
+    fields:
+      amount: { description: Amount, example: 412 }
+      category: { description: "food, subs, other, travel or shopping", example: food }
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.spent_this_month }
+        data: { value: "{{ states('input_number.spent_this_month') | float(0) + (amount | float(0)) }}" }
+      - action: input_number.set_value
+        target: { entity_id: "input_number.spent_{{ category | default('other') }}" }
+        data: { value: "{{ states('input_number.spent_' ~ (category | default('other'))) | float(0) + (amount | float(0)) }}" }
+
+automation:
+  - alias: Homebase · Money · new month
+    triggers:
+      - trigger: time
+        at: "00:00:00"
+    conditions:
+      - condition: template
+        value_template: "{{ now().day == 1 }}"
+    actions:
+      - action: input_number.set_value
+        target:
+          entity_id: [input_number.spent_this_month, input_number.spent_food, input_number.spent_subs, input_number.spent_other, input_number.spent_travel, input_number.spent_shopping]
+        data: { value: 0 }

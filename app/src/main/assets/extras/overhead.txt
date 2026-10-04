@@ -1,0 +1,9 @@
+# What it shows
+
+Planes within 100 km (callsign, airline, distance, altitude, climbing or descending) and satellites above you, the highest one, and the next ISS pass.
+
+# What it needs
+
+Two sensors with lists in their attributes. The package builds the planes sensor from the free OpenSky Network API (no account needed, limited rate) and the satellites one from N2YO (free API key from n2yo.com). Both use your home zone's location.
+
+Replace YOUR_N2YO_KEY. The planes list is computed in a template, so give it a minute after restarting.

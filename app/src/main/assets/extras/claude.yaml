@@ -1,0 +1,27 @@
+# Homebase · Claude Code. Needs the Mac package (shell_command.mac_run). Adjust the claude command to your setup.
+input_text:
+  claude_folder: { name: Claude folder, max: 255 }
+
+input_select:
+  claude_mode:
+    name: Claude permission mode
+    options: [auto, acceptEdits, plan, default]
+
+script:
+  claude_rc_start:
+    alias: Start a Claude Code host
+    fields: { mode: { description: "resume to continue the last session", example: resume } }
+    sequence:
+      - action: shell_command.mac_run
+        data:
+          cmd: >-
+            cd '{{ states('input_text.claude_folder') }}' &&
+            nohup claude --permission-mode {{ states('input_select.claude_mode') }} {{ '--continue' if mode == 'resume' else '' }}
+            >/tmp/claude-host.log 2>&1 &
+  mac_stop_claude:
+    alias: Stop one Claude Code host
+    fields: { name: { example: homebase } }
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "pkill -f 'claude.*{{ name }}'" } }]
+  mac_stop_all_claude:
+    alias: Stop every Claude Code host
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "pkill -f claude" } }]

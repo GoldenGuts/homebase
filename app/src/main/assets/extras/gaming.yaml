@@ -1,0 +1,34 @@
+# Homebase · Gaming PC. Replace binary_sensor.PC_ping and the launch action with yours.
+wake_on_lan:
+
+input_select:
+  pc_game:
+    name: Game
+    options: ["Hades II", "Elden Ring", "Rocket League", "Stardew Valley"]
+
+template:
+  - binary_sensor:
+      - name: PC active
+        unique_id: homebase_pc_active
+        device_class: running
+        state: "{{ is_state('binary_sensor.PC_ping', 'on') }}"
+
+sensor:
+  - platform: history_stats
+    name: PC usage today
+    unique_id: homebase_pc_usage_today
+    entity_id: binary_sensor.pc_active
+    state: "on"
+    type: time
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+
+script:
+  launch_selected_game:
+    alias: Launch the selected game
+    sequence:
+      # Replace with your launcher call, e.g. a HASS.Agent command or a shell_command over SSH.
+      - action: persistent_notification.create
+        data:
+          title: Homebase
+          message: "Launch {{ states('input_select.pc_game') }} (edit script.launch_selected_game)"

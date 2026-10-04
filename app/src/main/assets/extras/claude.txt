@@ -1,0 +1,11 @@
+# What it shows
+
+Claude Code: sessions live and started today, the selected project folder, the permission mode, one row per Remote Control host with Open / New session / Stop, and Start host, Resume, Stop all. Projects: your project folders with their git state; tap one to select it. Tile: Start a host.
+
+# What it needs
+
+Everything from the Mac guide (the status script and SSH). The status script also reports Claude Code: add these attributes to what it posts to sensor.mac_status:
+
+active_sessions (number of sessions running), claude_today (started today), sessions_json (a list of hosts: name, folder, status, started as epoch seconds, sessions, link, env_link, served: [{title, link}]) and projects (a list: name, path, git, branch, dirty, ahead, behind, last as epoch seconds).
+
+The package adds the folder and mode helpers and the scripts that start and stop hosts over SSH. Replace me@mac.local and the claude command line with how you run Claude Code on the Mac.

@@ -1,0 +1,11 @@
+# What it shows
+
+Hours of screen time today (ring), this week, and per screen: TV, phone, computer and gaming PC.
+
+# What it needs
+
+Home Assistant already knows when each screen is on; history_stats turns that into hours. You need:
+
+The phone's "interactive" sensor from the Home Assistant app (Settings → Companion app → Manage sensors → Interactive), a TV media player, and a sensor that is on while your computer is in use (the Home Assistant app for macOS, HASS.Agent on Windows, or anything that reports activity).
+
+Replace the three placeholder entity ids in the package (binary_sensor.PHONE_interactive, media_player.TV, binary_sensor.COMPUTER_active) with yours.

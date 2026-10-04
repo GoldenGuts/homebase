@@ -1,0 +1,30 @@
+# What it shows
+
+Mac apps & power: app tiles (tap to open), Wake / Sleep / Lock / Screen off / Peek and a keep-awake timer. Mac screen: the last screenshot. Tiles: Lock Mac, Mac screen off.
+
+# How it works
+
+A small script on the Mac reports its status to Home Assistant every minute (battery, load, disk, uptime, running apps). Home Assistant runs the actions on the Mac over SSH. Everything stays on your network.
+
+# 1. Status from the Mac
+
+Create a long-lived token in Home Assistant (your profile → Security). Save this as ~/bin/homebase-status.sh, make it executable, and run it every minute with launchd or cron:
+
+#!/bin/bash
+HA=http://homeassistant.local:8123
+TOKEN=paste-your-token
+BATT=$(pmset -g batt | grep -o '[0-9]*%' | tr -d '%')
+LOAD=$(sysctl -n vm.loadavg | awk '{print $2}')
+DISK=$(df -h / | awk 'NR==2{gsub("%","",$5); print $5}')
+UP=$(( ($(date +%s) - $(sysctl -n kern.boottime | awk -F'[ ,]' '{print $4}')) / 3600 ))
+APPS=""; for a in "Google Chrome" Cursor Ghostty Zed Xcode Finder; do pgrep -xq "$a" && v=true || v=false; APPS="$APPS\"$a\": $v,"; done
+curl -s -X POST "$HA/api/states/sensor.mac_status" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d "{\"state\": \"online\", \"attributes\": {\"battery\": ${BATT:-0}, \"load\": \"$LOAD\", \"disk_used_pct\": ${DISK:-0}, \"uptime_hours\": $UP, \"apps\": {${APPS%,}}}}"
+
+# 2. Actions over SSH
+
+Give Home Assistant an SSH key that the Mac accepts (System Settings → General → Sharing → Remote Login), then use the package below. Replace me@mac.local with your user and host.
+
+# 3. In the app
+
+Set the Mac's MAC address for Wake in the widget's settings → Advanced.

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0d0f14</color>
+    <color name="card">#171a22</color>
+    <color name="ink">#f3f4f8</color>
+    <color name="muted">#8a90a3</color>
+    <color name="cyan">#3fe3ff</color>
+    <color name="pink">#ff4fa3</color>
+    <color name="lime">#b5e21c</color>
+    <color name="orange">#ff9f2e</color>
+    <color name="icon_bg">#171a22</color>
+    <color name="dim">#5a6075</color>
+    <color name="surface2">#1d2130</color>
+</resources>

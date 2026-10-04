@@ -1,0 +1,46 @@
+# Homebase · Mac. Replace me@mac.local with your user@host. The Mac posts sensor.mac_status itself (see the guide).
+shell_command:
+  mac_run: "ssh -i /config/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new me@mac.local '{{ cmd }}'"
+
+template:
+  - binary_sensor:
+      - name: Mac online
+        unique_id: homebase_mac_online
+        device_class: connectivity
+        state: "{{ (now() - states.sensor.mac_status.last_updated).total_seconds() < 180 if states.sensor.mac_status is not none else false }}"
+  - sensor:
+      - name: Mac battery
+        unique_id: homebase_mac_battery
+        device_class: battery
+        unit_of_measurement: "%"
+        state: "{{ state_attr('sensor.mac_status', 'battery') | int(0) }}"
+
+input_boolean:
+  mac_caffeinated: { name: Mac kept awake }
+
+
+script:
+  mac_open_app:
+    fields: { app: { example: Safari } }
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "open -a '{{ app }}'" } }]
+  mac_sleep:
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "pmset sleepnow" } }]
+  mac_lock:
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "osascript -e 'tell application \"System Events\" to keystroke \"q\" using {control down, command down}'" } }]
+  mac_display_off:
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "pmset displaysleepnow" } }]
+  mac_screenshot:
+    sequence: [{ action: shell_command.mac_run, data: { cmd: "screencapture -x /tmp/homebase.png" } }]
+  mac_caffeinate:
+    fields: { hours: { example: 2 } }
+    sequence:
+      - action: shell_command.mac_run
+        data: { cmd: "nohup caffeinate -dimsu -t {{ (hours | float(1) * 3600) | int }} >/dev/null 2>&1 &" }
+      - action: input_boolean.turn_on
+        target: { entity_id: input_boolean.mac_caffeinated }
+  mac_decaffeinate:
+    sequence:
+      - action: shell_command.mac_run
+        data: { cmd: "pkill caffeinate" }
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.mac_caffeinated }
