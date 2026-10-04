@@ -1,4 +1,7 @@
-# Privacy
+# Homebase privacy policy
+
+Homebase (widgets for Home Assistant) is made by Jyotirmay (Weenja, https://weenja.in).
+Last updated: 5 October 2026.
 
 Homebase talks to **your own Home Assistant server only**. There is no analytics, no crash reporting,
 no ads, no account and no third-party service. The app never sends any of your data to the developer.
